@@ -1,0 +1,1 @@
+ C:\\Users\\ATHMANE\\boitex_info\\.dart_tool\\flutter_build\\817a21d38b22837681c38c1328a7a73d\\native_assets.json: 

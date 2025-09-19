@@ -1,0 +1,30 @@
+name: Send Intervention Notifications
+
+on:
+  schedule:
+    # This runs the job every 5 minutes
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Allows you to run it manually from the Actions tab
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install firebase-admin axios
+
+      - name: Run notification script
+        run: node notify-script.js
+        env:
+          # Use the secret we created in GitHub
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          ONESIGNAL_APP_ID: "0cd6bbc2-700d-487f-a459-50b4cc6b3652" # Your App ID
+          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }} # Create another secret for this!

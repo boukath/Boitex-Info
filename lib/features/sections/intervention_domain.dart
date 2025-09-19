@@ -2,6 +2,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import '../../shared_widgets/section_list_item.dart';
+
 
 enum InterventionStatus {
   New,
@@ -11,7 +14,7 @@ enum InterventionStatus {
   Resolved,
 }
 
-class Intervention {
+class Intervention implements SectionListItem {
   final String? id;
   final String code;
   final String clientName;
@@ -20,6 +23,7 @@ class Intervention {
   final String issue;
   final String level;
   final String comment;
+  final bool? notificationSent; // <-- 1. FIELD ADDED
 
   final InterventionStatus status;
   final List<String>? assignedTechnicianIds;
@@ -28,6 +32,7 @@ class Intervention {
   final String? clientSignatureBase64;
   final List<Map<String, dynamic>>? statusHistory;
 
+  // Report Fields
   final String? technicianName;
   final String? managerName;
   final DateTime? reportDate;
@@ -48,6 +53,7 @@ class Intervention {
     required this.issue,
     required this.level,
     this.comment = '',
+    this.notificationSent, // <-- 2. ADDED TO CONSTRUCTOR
     this.status = InterventionStatus.New,
     this.assignedTechnicianIds,
     this.assignedTechnicianNames,
@@ -66,6 +72,40 @@ class Intervention {
     this.managerSignatureBase64,
   });
 
+  // --- Mappings for SectionListItem ---
+  @override
+  String get id_ => this.id!;
+  @override
+  String get title => this.clientName;
+  @override
+  String get subtitle => this.issue;
+  // date is already present
+  @override
+  String get statusText => this.status.name;
+  @override
+  Color get statusColor {
+    return switch (status) {
+      InterventionStatus.New => Colors.grey.shade500,
+      InterventionStatus.Assigned => Colors.purple.shade400,
+      InterventionStatus.InProgress => Colors.blue.shade400,
+      InterventionStatus.OnHold => Colors.amber.shade500,
+      InterventionStatus.Resolved => Colors.green.shade500,
+    };
+  }
+  @override
+  IconData? get priorityIcon => Icons.flag_rounded;
+  @override
+  Color? get priorityIconColor {
+    return switch (level) {
+      'High Urgent' => Colors.red.shade400,
+      'Medium' => Colors.amber.shade700,
+      _ => Colors.green.shade400,
+    };
+  }
+  @override
+  late final VoidCallback onTap;
+
+  // --- Other getters and methods ---
   bool get hasReport => status == InterventionStatus.Resolved;
   Uint8List? get managerSignatureBytes => managerSignatureBase64 != null ? base64Decode(managerSignatureBase64!) : null;
   Uint8List? get clientSignatureBytes => clientSignatureBase64 != null ? base64Decode(clientSignatureBase64!) : null;
@@ -79,6 +119,7 @@ class Intervention {
     String? issue,
     String? level,
     String? comment,
+    bool? notificationSent, // <-- 3. ADDED TO COPYWITH
     InterventionStatus? status,
     List<String>? assignedTechnicianIds,
     List<String>? assignedTechnicianNames,
@@ -105,6 +146,7 @@ class Intervention {
       issue: issue ?? this.issue,
       level: level ?? this.level,
       comment: comment ?? this.comment,
+      notificationSent: notificationSent ?? this.notificationSent,
       status: status ?? this.status,
       assignedTechnicianIds: assignedTechnicianIds ?? this.assignedTechnicianIds,
       assignedTechnicianNames: assignedTechnicianNames ?? this.assignedTechnicianNames,
@@ -133,6 +175,7 @@ class Intervention {
       'issue': issue,
       'level': level,
       'comment': comment,
+      'notificationSent': notificationSent, // <-- 4. ADDED TO TOJSON
       'status': status.name,
       'assignedTechnicianIds': assignedTechnicianIds,
       'assignedTechnicianNames': assignedTechnicianNames,
@@ -153,29 +196,16 @@ class Intervention {
   }
 
   factory Intervention.fromJson(Map<String, dynamic> json, String documentId) {
-    DateTime _parseDate(dynamic timestamp, {required DateTime fallback}) {
-      if (timestamp is Timestamp) {
-        return timestamp.toDate();
-      }
-      return fallback;
-    }
-
-    DateTime? _parseNullableDate(dynamic timestamp) {
-      if (timestamp is Timestamp) {
-        return timestamp.toDate();
-      }
-      return null;
-    }
-
     return Intervention(
       id: documentId,
-      code: json['code'] as String? ?? 'N/A',
-      clientName: json['clientName'] as String? ?? 'N/A',
-      date: _parseDate(json['date'], fallback: DateTime.now()),
+      code: json['code'] as String,
+      clientName: json['clientName'] as String,
+      date: (json['date'] as Timestamp).toDate(),
       storeLocation: json['storeLocation'] as String? ?? '',
       issue: json['issue'] as String? ?? '',
-      level: json['level'] as String? ?? 'Normal', // UPDATED
+      level: json['level'] as String? ?? 'Normal',
       comment: json['comment'] as String? ?? '',
+      notificationSent: json['notificationSent'] as bool?, // <-- 5. ADDED TO FROMJSON
       status: InterventionStatus.values.firstWhere(
             (e) => e.name == json['status'],
         orElse: () => InterventionStatus.New,
@@ -187,7 +217,7 @@ class Intervention {
       statusHistory: (json['statusHistory'] as List<dynamic>?)?.cast<Map<String, dynamic>>(),
       technicianName: json['technicianName'] as String?,
       managerName: json['managerName'] as String?,
-      reportDate: _parseNullableDate(json['reportDate']),
+      reportDate: (json['reportDate'] as Timestamp?)?.toDate(),
       arrivalTime: json['arrivalTime'] as String?,
       departureTime: json['departureTime'] as String?,
       modelType: json['modelType'] as String?,

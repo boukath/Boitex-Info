@@ -26,10 +26,8 @@ class _InterventionRequestPageState extends State<InterventionRequestPage> {
   final _comment = TextEditingController();
   DateTime _date = DateTime.now();
 
-  // --- CHANGE 1: Set the default level to 'Normal' ---
   String _level = 'Normal';
 
-  // --- CHANGE 2: Define levels and colors in a Map for easier management ---
   final Map<String, Color> _levelOptions = {
     'Normal': Colors.green.shade400,
     'Medium': Colors.yellow.shade700,
@@ -88,6 +86,7 @@ class _InterventionRequestPageState extends State<InterventionRequestPage> {
         issue: _issue.text.trim(),
         level: _level,
         comment: _comment.text.trim(),
+        notificationSent: false, // <-- THIS LINE WAS ADDED
         assignedTechnicianIds: _assignedUsers.map((u) => u.uid).toList(),
         assignedTechnicianNames: _assignedUsers.map((u) => u.fullName).toList(),
         status: _assignedUsers.isNotEmpty ? InterventionStatus.Assigned : InterventionStatus.New,
@@ -96,11 +95,6 @@ class _InterventionRequestPageState extends State<InterventionRequestPage> {
       final userName = user?.displayName ?? user?.email ?? 'System Action';
 
       await _service.addIntervention(newIntervention, userName);
-
-      if (_assignedUsers.isNotEmpty) {
-        // Placeholder for sending a notification
-        print('TODO: Send notification to ${_assignedUsers.map((e) => e.fullName)}');
-      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saved ${newIntervention.code}')));
@@ -246,7 +240,6 @@ class _InterventionRequestPageState extends State<InterventionRequestPage> {
     );
   }
 
-  // --- CHANGE 3: Updated level picker to use the new Map ---
   Widget _levelPicker() {
     return InputDecorator(
       decoration: const InputDecoration(labelText: 'Level'),
@@ -255,9 +248,9 @@ class _InterventionRequestPageState extends State<InterventionRequestPage> {
         children: _levelOptions.entries.map((entry) {
           final selected = _level == entry.key;
           return ChoiceChip(
-            label: Text(entry.key), // Use the label from the map key
+            label: Text(entry.key),
             selected: selected,
-            selectedColor: entry.value, // Use the color from the map value
+            selectedColor: entry.value,
             onSelected: (_) => setState(() => _level = entry.key),
           );
         }).toList(),
@@ -266,7 +259,6 @@ class _InterventionRequestPageState extends State<InterventionRequestPage> {
   }
 }
 
-// _MultiSelectDialog remains the same
 class _MultiSelectDialog extends StatefulWidget {
   final List<BoitexUser> items;
   final List<BoitexUser> initialSelectedItems;

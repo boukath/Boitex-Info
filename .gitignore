@@ -12,3 +12,6 @@ __pycache__/
 # IDE
 .vscode/
 .idea/
+
+# Ignore the build output folder
+/build/
