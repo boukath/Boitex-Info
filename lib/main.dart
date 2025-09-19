@@ -12,8 +12,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+// Import the new loader page
+import 'package:boitex_info/features/sections/intervention_loader_page.dart';
 
-// NOTE: I've re-added the GlobalKey for when you want to handle notification taps.
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final localeProvider = StateProvider<Locale>((ref) => const Locale('en'));
 
@@ -22,20 +23,28 @@ void main() async {
 
   try {
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-    print("✅ Firebase initialized successfully!");
   } catch (e) {
-    print("❌❌❌ FIREBASE INITIALIZATION FAILED: $e");
+    print("FIREBASE INITIALIZATION FAILED: $e");
   }
 
   OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
   OneSignal.initialize("0cd6bbc2-700d-487f-a459-50b4cc6b3652");
+  OneSignal.Notifications.requestPermission(true);
 
   OneSignal.Notifications.addClickListener((event) {
-    print("Notification was tapped!");
     final notificationData = event.notification.additionalData;
     if (notificationData != null) {
-      print("Data from notification: $notificationData");
-      // TODO: Handle navigation here using the navigatorKey
+      final String? page = notificationData['page'] as String?;
+      final String? id = notificationData['id'] as String?;
+
+      if (page == 'intervention_details' && id != null) {
+        // Use the navigator key to push the new loader page
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (context) => InterventionLoaderPage(interventionId: id),
+          ),
+        );
+      }
     }
   });
 
@@ -51,7 +60,7 @@ class BoitexApp extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
 
     return MaterialApp(
-      navigatorKey: navigatorKey, // Re-added the key
+      navigatorKey: navigatorKey,
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -68,12 +77,10 @@ class BoitexApp extends ConsumerWidget {
           }
           final user = snapshot.data;
           if (user == null) {
-            // ADD THIS LINE: Untag the device when the user logs out.
             OneSignal.logout();
             return LoginPage(auth: auth);
           }
 
-          // ADD THIS LINE: Tag the device with the user's unique ID when they log in.
           OneSignal.login(user.uid);
           return DashboardPage(user: user);
         },
