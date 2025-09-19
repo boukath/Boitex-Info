@@ -1,0 +1,14 @@
+{
+    "@@locale": "fr",
+    "loginWelcomeTitle": "Bon retour",
+    "loginSignInButton": "Se connecter",
+    "loginEmailLabel": "E-mail",
+    "loginPasswordLabel": "Mot de passe",
+    "loginForgotPassword": "Mot de passe oublié?",
+    "dashboardAppBarTitle": "Tableau de bord",
+    "dashboardOpenTickets": "Tickets ouverts",
+    "dashboardActiveInstallations": "Installations actives",
+    "dashboardRepairBacklog": "Réparations en attente",
+    "dashboardPendingDeliveries": "Livraisons en attente",
+    "historyHubTitle": "Historique"
+}

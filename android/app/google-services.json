@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1043072149264",
+    "project_id": "boitexinfo-5fc66",
+    "storage_bucket": "boitexinfo-5fc66.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1043072149264:android:6b6ae93226bb8ec2222795",
+        "android_client_info": {
+          "package_name": "com.boitexinfo.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBpd2t2B8mU4wrRAPP8Zne5tGM8jAcj_9k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1043072149264:android:ff0178131e1fc3d3222795",
+        "android_client_info": {
+          "package_name": "com.example.boitex_info"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBpd2t2B8mU4wrRAPP8Zne5tGM8jAcj_9k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
