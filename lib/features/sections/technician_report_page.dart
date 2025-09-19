@@ -3,22 +3,26 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:boitex_info/features/dashboard/application/dashboard_providers.dart'; // 1. ADD THIS IMPORT
 import 'package:boitex_info/features/sections/intervention_domain.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // 2. ADD THIS IMPORT
 import 'package:intl/intl.dart';
 import 'package:signature/signature.dart';
 
 import 'intervention_service.dart';
 
-class TechnicianReportPage extends StatefulWidget {
+// 3. CHANGE to a ConsumerStatefulWidget
+class TechnicianReportPage extends ConsumerStatefulWidget {
   final Intervention intervention;
   const TechnicianReportPage({super.key, required this.intervention});
 
   @override
-  State<TechnicianReportPage> createState() => _TechnicianReportPageState();
+  ConsumerState<TechnicianReportPage> createState() => _TechnicianReportPageState();
 }
 
-class _TechnicianReportPageState extends State<TechnicianReportPage> {
+// 4. CHANGE to a ConsumerState
+class _TechnicianReportPageState extends ConsumerState<TechnicianReportPage> {
   final _formKey = GlobalKey<FormState>();
   final _tech = TextEditingController();
   final _mgr = TextEditingController();
@@ -60,6 +64,16 @@ class _TechnicianReportPageState extends State<TechnicianReportPage> {
     if (!_formKey.currentState!.validate() || _saving) return;
     setState(() => _saving = true);
 
+    // 5. GET the current user from Riverpod
+    final currentUser = ref.read(boitexUserProvider).value;
+    if (currentUser == null) {
+      if(mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error: Current user not found.')));
+      }
+      setState(() => _saving = false);
+      return;
+    }
+
     try {
       final sigBytes = await _sigController.toPngBytes();
       final sigBase64 = sigBytes != null ? base64Encode(sigBytes) : null;
@@ -78,7 +92,8 @@ class _TechnicianReportPageState extends State<TechnicianReportPage> {
         status: InterventionStatus.Resolved,
       );
 
-      await _service.updateIntervention(updatedIntervention);
+      // 6. PASS the user's name as the second argument
+      await _service.updateIntervention(updatedIntervention, currentUser.fullName);
 
       if (!mounted) return;
 
@@ -86,7 +101,8 @@ class _TechnicianReportPageState extends State<TechnicianReportPage> {
         const SnackBar(content: Text('Report submitted and status set to Resolved.')),
       );
 
-      Navigator.pop(context, true);
+      // Pop twice to get back to the main list page
+      Navigator.of(context)..pop()..pop();
 
     } catch (e) {
       if (mounted) {
