@@ -1,7 +1,6 @@
 // lib/main.dart
-import 'package:boitex_info/l10n/app_localizations.dart'; // <-- CORRECTED IMPORT
+import 'package:boitex_info/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-
 import 'package:boitex_info/auth/data/auth_repository.dart';
 import 'package:boitex_info/auth/data/firebase_auth_repository.dart';
 import 'package:boitex_info/auth/models/boitex_user.dart';
@@ -14,6 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 
+// NOTE: I've re-added the GlobalKey for when you want to handle notification taps.
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final localeProvider = StateProvider<Locale>((ref) => const Locale('en'));
 
 void main() async {
@@ -34,6 +35,7 @@ void main() async {
     final notificationData = event.notification.additionalData;
     if (notificationData != null) {
       print("Data from notification: $notificationData");
+      // TODO: Handle navigation here using the navigatorKey
     }
   });
 
@@ -49,6 +51,7 @@ class BoitexApp extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
 
     return MaterialApp(
+      navigatorKey: navigatorKey, // Re-added the key
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -65,8 +68,13 @@ class BoitexApp extends ConsumerWidget {
           }
           final user = snapshot.data;
           if (user == null) {
+            // ADD THIS LINE: Untag the device when the user logs out.
+            OneSignal.logout();
             return LoginPage(auth: auth);
           }
+
+          // ADD THIS LINE: Tag the device with the user's unique ID when they log in.
+          OneSignal.login(user.uid);
           return DashboardPage(user: user);
         },
       ),
