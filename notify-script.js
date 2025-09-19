@@ -1,3 +1,4 @@
+// File: notify-script.js
 const admin = require('firebase-admin');
 const axios = require('axios');
 
@@ -19,6 +20,7 @@ async function sendNotification(userIds, intervention) {
     include_external_user_ids: userIds,
     headings: { en: "New Intervention Assigned" },
     contents: { en: `Ticket #${intervention.code} for '${intervention.clientName}' has been assigned.` },
+    // THE FIX IS HERE: Changed intervention.data.id to intervention.id
     data: { "page": "intervention_details", "id": intervention.id },
   };
 
@@ -31,14 +33,13 @@ async function sendNotification(userIds, intervention) {
     });
     console.log("Notification sent successfully to:", userIds);
   } catch (error) {
-    console.error("Error sending notification:", error.response.data);
+    console.error("Error sending notification:", error.response ? error.response.data : error.message);
   }
 }
 
 async function checkInterventions() {
   console.log("Checking for interventions needing notification...");
 
-  // Find interventions that are assigned but haven't had a notification sent yet
   const interventionsRef = db.collection('interventions');
   const snapshot = await interventionsRef
     .where('notificationSent', '==', false)
@@ -57,8 +58,6 @@ async function checkInterventions() {
     if (techIds && techIds.length > 0) {
       console.log(`Found intervention ${intervention.code} for technicians ${techIds.join(', ')}.`);
       await sendNotification(techIds, intervention);
-
-      // IMPORTANT: Update the document to mark that the notification has been sent
       await doc.ref.update({ notificationSent: true });
       console.log(`Marked intervention ${intervention.code} as notified.`);
     }
