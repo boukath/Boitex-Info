@@ -2,12 +2,10 @@
 const admin = require('firebase-admin');
 const axios = require('axios');
 
-// --- Configuration ---
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
 const ONESIGNAL_APP_ID = process.env.ONESIGNAL_APP_ID;
 const ONESIGNAL_API_KEY = process.env.ONESIGNAL_API_KEY;
 
-// Initialize Firebase Admin SDK
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
@@ -20,21 +18,17 @@ async function sendNotification(userIds, intervention) {
     include_external_user_ids: userIds,
     headings: { en: "New Intervention Assigned" },
     contents: { en: `Ticket #${intervention.code} for '${intervention.clientName}' has been assigned.` },
-    // THE FIX IS HERE: Changed intervention.data.id to intervention.id
     data: { "page": "intervention_details", "id": intervention.id },
   };
 
-  try {
-    await axios.post("https://onesignal.com/api/v1/notifications", notification, {
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "Authorization": `Basic ${ONESIGNAL_API_KEY}`,
-      },
-    });
-    console.log("Notification sent successfully to:", userIds);
-  } catch (error) {
-    console.error("Error sending notification:", error.response ? error.response.data : error.message);
-  }
+  // The 'try/catch' block now only handles sending the notification
+  await axios.post("https://onesignal.com/api/v1/notifications", notification, {
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Authorization": `Basic ${ONESIGNAL_API_KEY}`,
+    },
+  });
+  console.log("Notification sent successfully to:", userIds);
 }
 
 async function checkInterventions() {
@@ -57,9 +51,17 @@ async function checkInterventions() {
 
     if (techIds && techIds.length > 0) {
       console.log(`Found intervention ${intervention.code} for technicians ${techIds.join(', ')}.`);
-      await sendNotification(techIds, intervention);
-      await doc.ref.update({ notificationSent: true });
-      console.log(`Marked intervention ${intervention.code} as notified.`);
+      try {
+        // We try to send the notification...
+        await sendNotification(techIds, intervention);
+
+        // ...and ONLY if it succeeds, we update the database.
+        await doc.ref.update({ notificationSent: true });
+        console.log(`Marked intervention ${intervention.code} as notified.`);
+      } catch (error) {
+        // If sending fails, we log the error and do NOT mark it as sent.
+        console.error(`Error processing intervention ${intervention.code}:`, error.response ? error.response.data : error.message);
+      }
     }
   }
 }
