@@ -1,4 +1,3 @@
-// File: notify-script.js
 const admin = require('firebase-admin');
 const axios = require('axios');
 
@@ -12,7 +11,7 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-// --- Function to check for new ASSIGNMENTS ---
+// --- Function to check for new ASSIGNMENTS (for specific technicians) ---
 async function checkAssignedInterventions() {
   console.log("Checking for new assignments...");
   const snapshot = await db.collection('interventions')
@@ -38,9 +37,7 @@ async function checkAssignedInterventions() {
     };
 
     try {
-      await axios.post("https://onesignal.com/api/v1/notifications", notification, {
-        headers: { "Authorization": `Basic ${ONESIGNAL_API_KEY}` },
-      });
+      await axios.post("https://onesignal.com/api/v1/notifications", notification, { headers: { "Authorization": `Basic ${ONESIGNAL_API_KEY}` } });
       console.log(`Assignment notification sent for ${intervention.code}.`);
       await doc.ref.update({ notificationSent: true });
     } catch (error) {
@@ -49,7 +46,7 @@ async function checkAssignedInterventions() {
   }
 }
 
-// --- NEW: Function to check for RESOLVED interventions ---
+// --- Function to check for RESOLVED interventions (for all users) ---
 async function checkResolvedInterventions() {
   console.log("Checking for resolved interventions...");
   const snapshot = await db.collection('interventions')
@@ -75,9 +72,7 @@ async function checkResolvedInterventions() {
     };
 
     try {
-      await axios.post("https://onesignal.com/api/v1/notifications", notification, {
-        headers: { "Authorization": `Basic ${ONESIGNAL_API_KEY}` },
-      });
+      await axios.post("https://onesignal.com/api/v1/notifications", notification, { headers: { "Authorization": `Basic ${ONESIGNAL_API_KEY}` } });
       console.log(`Resolved notification sent for ${intervention.code}.`);
       await doc.ref.update({ resolvedNotificationSent: true });
     } catch (error) {
