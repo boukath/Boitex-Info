@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../../shared_widgets/section_list_item.dart';
 
-
 enum InterventionStatus {
   New,
   Assigned,
@@ -23,7 +22,8 @@ class Intervention implements SectionListItem {
   final String issue;
   final String level;
   final String comment;
-  final bool? notificationSent; // <-- 1. FIELD ADDED
+  final bool? notificationSent;
+  final bool? resolvedNotificationSent;
 
   final InterventionStatus status;
   final List<String>? assignedTechnicianIds;
@@ -53,7 +53,8 @@ class Intervention implements SectionListItem {
     required this.issue,
     required this.level,
     this.comment = '',
-    this.notificationSent, // <-- 2. ADDED TO CONSTRUCTOR
+    this.notificationSent,
+    this.resolvedNotificationSent,
     this.status = InterventionStatus.New,
     this.assignedTechnicianIds,
     this.assignedTechnicianNames,
@@ -119,7 +120,8 @@ class Intervention implements SectionListItem {
     String? issue,
     String? level,
     String? comment,
-    bool? notificationSent, // <-- 3. ADDED TO COPYWITH
+    bool? notificationSent,
+    bool? resolvedNotificationSent,
     InterventionStatus? status,
     List<String>? assignedTechnicianIds,
     List<String>? assignedTechnicianNames,
@@ -147,6 +149,7 @@ class Intervention implements SectionListItem {
       level: level ?? this.level,
       comment: comment ?? this.comment,
       notificationSent: notificationSent ?? this.notificationSent,
+      resolvedNotificationSent: resolvedNotificationSent ?? this.resolvedNotificationSent,
       status: status ?? this.status,
       assignedTechnicianIds: assignedTechnicianIds ?? this.assignedTechnicianIds,
       assignedTechnicianNames: assignedTechnicianNames ?? this.assignedTechnicianNames,
@@ -175,7 +178,8 @@ class Intervention implements SectionListItem {
       'issue': issue,
       'level': level,
       'comment': comment,
-      'notificationSent': notificationSent, // <-- 4. ADDED TO TOJSON
+      'notificationSent': notificationSent,
+      'resolvedNotificationSent': resolvedNotificationSent,
       'status': status.name,
       'assignedTechnicianIds': assignedTechnicianIds,
       'assignedTechnicianNames': assignedTechnicianNames,
@@ -205,7 +209,8 @@ class Intervention implements SectionListItem {
       issue: json['issue'] as String? ?? '',
       level: json['level'] as String? ?? 'Normal',
       comment: json['comment'] as String? ?? '',
-      notificationSent: json['notificationSent'] as bool?, // <-- 5. ADDED TO FROMJSON
+      notificationSent: json['notificationSent'] as bool?,
+      resolvedNotificationSent: json['resolvedNotificationSent'] as bool?,
       status: InterventionStatus.values.firstWhere(
             (e) => e.name == json['status'],
         orElse: () => InterventionStatus.New,

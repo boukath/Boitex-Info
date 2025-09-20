@@ -3,16 +3,15 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:boitex_info/features/dashboard/application/dashboard_providers.dart'; // 1. ADD THIS IMPORT
+import 'package:boitex_info/features/dashboard/application/dashboard_providers.dart';
 import 'package:boitex_info/features/sections/intervention_domain.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // 2. ADD THIS IMPORT
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:signature/signature.dart';
 
 import 'intervention_service.dart';
 
-// 3. CHANGE to a ConsumerStatefulWidget
 class TechnicianReportPage extends ConsumerStatefulWidget {
   final Intervention intervention;
   const TechnicianReportPage({super.key, required this.intervention});
@@ -21,7 +20,6 @@ class TechnicianReportPage extends ConsumerStatefulWidget {
   ConsumerState<TechnicianReportPage> createState() => _TechnicianReportPageState();
 }
 
-// 4. CHANGE to a ConsumerState
 class _TechnicianReportPageState extends ConsumerState<TechnicianReportPage> {
   final _formKey = GlobalKey<FormState>();
   final _tech = TextEditingController();
@@ -64,7 +62,6 @@ class _TechnicianReportPageState extends ConsumerState<TechnicianReportPage> {
     if (!_formKey.currentState!.validate() || _saving) return;
     setState(() => _saving = true);
 
-    // 5. GET the current user from Riverpod
     final currentUser = ref.read(boitexUserProvider).value;
     if (currentUser == null) {
       if(mounted) {
@@ -90,9 +87,9 @@ class _TechnicianReportPageState extends ConsumerState<TechnicianReportPage> {
         partsUsed: _parts.text.trim(),
         managerSignatureBase64: sigBase64,
         status: InterventionStatus.Resolved,
+        resolvedNotificationSent: false,
       );
 
-      // 6. PASS the user's name as the second argument
       await _service.updateIntervention(updatedIntervention, currentUser.fullName);
 
       if (!mounted) return;
